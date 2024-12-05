@@ -8,12 +8,13 @@ for line in lines:
 m.append('#'*(len(lines[0])+2))
 
 
-def xmas(m, y, x, d):
+def xmas(m, y, x):
     res = 0
-    if m[y+1*d[0]][x+1*d[1]] == "M":
-        if m[y+2*d[0]][x+2*d[1]] == "A":
-            if m[y+3*d[0]][x+3*d[1]] == "S":
-                res += 1
+    for d in ((0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1)):
+        if m[y+1*d[0]][x+1*d[1]] == "M":
+            if m[y+2*d[0]][x+2*d[1]] == "A":
+                if m[y+3*d[0]][x+3*d[1]] == "S":
+                    res += 1
     return (res)
 
 
@@ -30,8 +31,7 @@ p2 = 0
 for y in range(1, len(m)-1):
     for x in range(1, len(m[0])-1):
         if m[y][x] == 'X':
-            for d in ((0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1)):
-                p1 += xmas(m, y, x, d)
+            p1 += xmas(m, y, x)
         if m[y][x] == 'A':
             p2 += masx(m, y, x)
 print(p1, p2)
