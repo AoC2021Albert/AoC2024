@@ -5,7 +5,7 @@ lines = f.read().splitlines()
 TALL = lines.index('')
 WIDE = len(lines[0])
 MOVE = {'^': -1j, 'v': 1j, '<': -1, '>': 1}
-VIEW = False
+VIEW = True
 walls = []
 boxes = []
 # w_ prefix is for Wide on second part
@@ -49,26 +49,27 @@ for move in moves:
                 new_p -= dir
             p += dir
     if VIEW:
+        screen = f"\033[1;1H"
         for y in range(TALL):
             for x in range(WIDE):
-                if x+y*1j in boxes:
+                pos = x+y*1j
+                if pos in boxes:
                     c = 'O'
-                elif x+y*1j in walls:
+                elif pos in walls:
                     c = '#'
-                elif x+y*1j == p:
+                elif pos == p:
                     c = '@'
                 else:
                     c = '.'
-                print(f"\033[{int(y)+1};{int(x)+1}H{c}", end="")
+                screen += c
+            screen += "\n"
+        print(screen, end="")
 if VIEW:
     print("\033[?25h", end="")  # show cursor
-    print(f"\033[{51};{1}H#", end="")  # move cursor to the bottom
+    print(f"\033[{TALL+1};{1}H#", end="")  # move cursor to the bottom
 
-res = 0
-for box in boxes:
-    res += abs(box.imag)*100
-    res += abs(box.real)
-print(res)
+print(sum(abs(box.imag) * 100 + abs(box.real) for box in boxes))
+
 if VIEW:
     input("Press Enter for part 2")
 
@@ -116,29 +117,26 @@ for move in moves:
                 move_boxes_v(p, dir, w_walls, w_boxes, True)
                 p = new_p
     if VIEW:
+        screen = f"\033[1;1H"
         left_box = True
         for y in range(TALL):
-            for x in range(WIDE*2):
-                if x+y*1j in w_boxes:
-                    if left_box:
-                        c = '['
-                    else:
-                        c = ']'
+            for x in range(WIDE * 2):
+                pos = x + y * 1j
+                if pos in w_boxes:
+                    c = '[' if left_box else ']'
                     left_box = not left_box
-                elif x+y*1j in w_walls:
+                elif pos in w_walls:
                     c = '#'
-                elif x+y*1j == p:
+                elif pos == p:
                     c = '@'
                 else:
                     c = '.'
-                print(f"\033[{int(y)+1};{int(x)+1}H{c}", end="")
+                screen += c
+            screen += "\n"
+        print(screen, end="")
 
 if VIEW:
     print("\033[?25h", end="")  # show cursor
-    print(f"\033[{51};{1}H#", end="")
-res = 0
-for box in w_boxes[::2]:
-    res += abs(box.imag)*100
-    res += abs(box.real)
+    print(f"\033[{TALL+1};{1}H#", end="")
 
-print(res)
+print(sum(abs(box.imag) * 100 + abs(box.real) for box in w_boxes[::2]))
