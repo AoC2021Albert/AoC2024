@@ -3,13 +3,15 @@ f = open('15/in.raw', 'r')
 # f = open('15/sample.raw', 'r')
 lines = f.read().splitlines()
 TALL = lines.index('')
-WIDE= len(lines[0])
+WIDE = len(lines[0])
 MOVE = {'^': -1j, 'v': 1j, '<': -1, '>': 1}
-VIEW = True
+VIEW = False
 walls = []
-w_walls = []
 boxes = []
+# w_ prefix is for Wide on second part
+w_walls = []
 w_boxes = []
+# Read input map
 for y in range(TALL):
     for x, c in enumerate(lines[y]):
         if c == '#':
@@ -22,12 +24,16 @@ for y in range(TALL):
             initial_p = x+y*1j
         else:
             assert (c == '.')
-
+# Read moves
 moves = []
 for i in range(TALL+1, len(lines)):
     moves += list(lines[i])
 
+# START PART 1
 p = initial_p
+if VIEW:
+    print("\033[?25l", end="")  # hide cursor
+    print("\033[2J\033[H", end="")  # clear screen
 for move in moves:
     dir = MOVE[move]
     new_p = p+dir
@@ -42,26 +48,42 @@ for move in moves:
                 boxes[boxes.index(new_p)] += dir
                 new_p -= dir
             p += dir
+    if VIEW:
+        for y in range(TALL):
+            for x in range(WIDE):
+                if x+y*1j in boxes:
+                    c = 'O'
+                elif x+y*1j in walls:
+                    c = '#'
+                elif x+y*1j == p:
+                    c = '@'
+                else:
+                    c = '.'
+                print(f"\033[{int(y)+1};{int(x)+1}H{c}", end="")
+if VIEW:
+    print("\033[?25h", end="")  # show cursor
+    print(f"\033[{51};{1}H#", end="")  # move cursor to the bottom
+
 res = 0
 for box in boxes:
     res += abs(box.imag)*100
     res += abs(box.real)
 print(res)
+if VIEW:
+    input("Press Enter for part 2")
+
+# START PART 2
 
 
-def move_boxes(p, dir, w_walls, w_boxes, do_move):
+def move_boxes_v(p, dir, w_walls, w_boxes, do_move):
     new_p = p+dir
     if new_p in w_walls:
         return False
     if new_p in w_boxes:
         first_box_idx = w_boxes.index(new_p)
-        second_box_idx = first_box_idx ^ 1
-        if dir.imag == 0:
-            if move_boxes(w_boxes[second_box_idx], dir, w_walls, w_boxes, do_move):
-                w_boxes[first_box_idx] += dir
-                w_boxes[second_box_idx] += dir
-        elif (move_boxes(new_p, dir, w_walls, w_boxes, do_move) and
-              move_boxes(w_boxes[second_box_idx], dir, w_walls, w_boxes, do_move)):
+        second_box_idx = first_box_idx ^ 1  # xor 1 to get the other box side
+        if (move_boxes_v(new_p, dir, w_walls, w_boxes, do_move) and
+                move_boxes_v(w_boxes[second_box_idx], dir, w_walls, w_boxes, do_move)):
             if do_move:
                 w_boxes[first_box_idx] += dir
                 w_boxes[second_box_idx] += dir
@@ -80,7 +102,7 @@ for move in moves:
     if new_p not in w_walls+w_boxes:
         p = new_p
     else:
-        if dir.imag == 0:
+        if dir.imag == 0:  # same as before
             while new_p in w_boxes:
                 new_p += dir
             if new_p not in w_walls:
@@ -89,9 +111,9 @@ for move in moves:
                     w_boxes[w_boxes.index(new_p)] += dir
                     new_p -= dir
                 p += dir
-        else:
-            if move_boxes(p, dir, w_walls, w_boxes, False):
-                move_boxes(p, dir, w_walls, w_boxes, True)
+        else:  # vertical gets more complicated
+            if move_boxes_v(p, dir, w_walls, w_boxes, False):
+                move_boxes_v(p, dir, w_walls, w_boxes, True)
                 p = new_p
     if VIEW:
         left_box = True
@@ -109,7 +131,7 @@ for move in moves:
                     c = '@'
                 else:
                     c = '.'
-                print(f"\033[{int(y)+1};{int(x)}H{c}", end="")
+                print(f"\033[{int(y)+1};{int(x)+1}H{c}", end="")
 
 if VIEW:
     print("\033[?25h", end="")  # show cursor
