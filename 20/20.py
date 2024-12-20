@@ -49,20 +49,42 @@ for steps, p in enumerate(path[:-2]):
 
 print(sorted(shortcuts,key=lambda x: x[0]))
 print(len(list(x for x in shortcuts if x[0] >= 100)))
+
+#better part 2
+res=0
+for steps, cheat_start in enumerate(path[:-2]):
+    for extra_steps, cheat_end in enumerate(path[steps+1:]):
+        cheat=cheat_end-cheat_start
+        euclidean_distance = abs(cheat.real)+abs(cheat.imag)
+        if euclidean_distance <= 20 and extra_steps +1 - euclidean_distance >= 100:
+            res+=1
+print(res)
 exit()
-# part 2
+ # part 2, also works, but has finished AFTER I've written the better solution
 def add_cheats(cheats, p, depth):
     if depth == 0:
         return
     for d in (1,1j,-1,-1j):
-        cheats.add(p+d)
-        add_cheats(cheats, _p:=p+d, depth-1)
+        if cheats[p+d] > 20-depth+1:
+            cheats[p+d] = 20-depth+1
+            add_cheats(cheats, p+d, depth-1)
 
-cheats = set()
+cheats = defaultdict(lambda: math.inf)
 add_cheats(cheats,0,20)
-for i in range(20):
-    for _ in range(i):
-        for d in (1,1j,-1,-1j):
-            if p+d in path:
-                p+=d
+print(cheats)
 
+print(len(path))
+shortcuts = []
+for steps, p in enumerate(path[:-2]):
+    print(steps)
+    for d, walked in cheats.items():
+        try:
+            if (SAVE:=path.index(p+d)-steps-walked) > 0:
+                shortcuts.append((SAVE,p,d))
+        except:
+            pass
+
+print(sorted(shortcuts,key=lambda x: x[0]))
+print(len(list(x for x in shortcuts if x[0] >= 100)))
+
+#961805
