@@ -1,11 +1,6 @@
 #!/usr/bin/env python
-from collections import defaultdict, deque
-from pprint import pprint
-from functools import reduce, cache
-from operator import mul
-import re
+from functools import cache
 import math
-from copy import deepcopy
 
 
 f = open('21/in.raw', 'r')
@@ -13,25 +8,27 @@ f = open('21/in.raw', 'r')
 lines = f.read().splitlines()
 
 DIR = {'^': -1j, 'v': 1j, '<': -1, '>': 1}
+NUMKEYPAD = [['7', '8', '9'],
+             ['4', '5', '6'],
+             ['1', '2', '3'],
+             ['X', '0', 'A']]
+DIRKEYPAD = [['X', '^', 'A'],
+             ['<', 'v', '>']]
+INVALID = {}
 
-INVALID = {'numeric': 3j+0,
-           'direction': 0}
-KNUMS = {'7': 0,
-         '8': 1,
-         '9': 2,
-         '4': 1j,
-         '5': 1j+1,
-         '6': 1j+2,
-         '1': 2j,
-         '2': 2j+1,
-         '3': 2j+2,
-         '0': 3j+1,
-         'A': 3j+2}
-KDIRS = {'^': 1,
-         'A': 2,
-         '<': 1j,
-         'v': 1j+1,
-         '>': 1j+2}
+KNUMS = {}
+for y, row in enumerate(NUMKEYPAD):
+    for x, val in enumerate(row):
+        KNUMS[val] = y*1j+x
+        if val == 'X':
+            INVALID['numeric'] = y*1j+x
+
+KDIRS = {}
+for y, row in enumerate(DIRKEYPAD):
+    for x, val in enumerate(row):
+        KDIRS[val] = y*1j+x
+        if val == 'X':
+            INVALID['direction'] = y*1j+x
 
 
 def valid_path(a, path, kind):
@@ -79,15 +76,17 @@ def path_len(a, b, kind, depth):
     return min_path
 
 
-res = 0
-for path in lines:
-    print(path)
-    value = int(path[:-1])
-    ext_path = 'A'+path
-    path_lens = [path_len(KNUMS[ext_path[i]], KNUMS[ext_path[i+1]],
-                          'numeric', 25) for i in range(len(ext_path)-1)]
-    len_path = sum(path_lens)
-    res += value * len_path
-    print(res)
+def solve(lines, depth):
+    res = 0
+    for path in lines:
+        value = int(path[:-1])
+        ext_path = 'A'+path
+        path_lens = [path_len(KNUMS[ext_path[i]], KNUMS[ext_path[i+1]],
+                              'numeric', depth) for i in range(len(ext_path)-1)]
+        len_path = sum(path_lens)
+        res += value * len_path
+    return res
 
-print(res)
+
+print(solve(lines, 2))
+print(solve(lines, 25))
