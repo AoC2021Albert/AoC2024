@@ -13,6 +13,7 @@ f = open('21/in.raw', 'r')
 lines = f.read().splitlines()
 
 DIR = {'^': -1j, 'v': 1j, '<': -1, '>': 1}
+
 INVALID = {'numeric': 3j+0,
            'direction': 0}
 KNUMS = {'7': 0,
@@ -52,7 +53,7 @@ def sign(a, b):
 
 
 @cache
-def shortest_paths(a, b, kind):
+def path_len(a, b, kind, depth):
     match sign(a.real, b.real):
         case 0:
             hor = ''
@@ -67,60 +68,26 @@ def shortest_paths(a, b, kind):
             ver = '^'*int(abs(a.imag-b.imag))
         case -1:
             ver = 'v'*int(abs(a.imag-b.imag))
-    paths = []
-    if valid_path(a, hor+ver, kind):
-        paths.append(hor+ver+'A')
-        # return(frozenset(paths))
-    if valid_path(a, ver+hor, kind):
-        paths.append(ver+hor+'A')
-    return frozenset(paths)
-
-
-def solve_numeric(line):
-    if len(line) == 1:
-        return ['']
-    else:
-        res_paths = []
-        curr_paths = shortest_paths(KNUMS[line[0]], KNUMS[line[1]], 'numeric')
-        rem_paths = solve_numeric(line[1:])
-        for curr_path in curr_paths:
-            for rem_path in rem_paths:
-                res_paths.append(curr_path+rem_path)
-        return res_paths
-
-
-def solve_direction(line):
-    if len(line) == 1:
-        return ['']
-    else:
-        res_paths = set()
-        curr_paths = shortest_paths(
-            KDIRS[line[0]], KDIRS[line[1]], 'direction')
-        rem_paths = solve_direction(line[1:])
-        for curr_path in curr_paths:
-            for rem_path in rem_paths:
-                res_paths.add(curr_path+rem_path)
-        return res_paths
-
-
-def solve_directions(lines):
-    res_paths = set()
-    for line in lines:
-        res_paths = res_paths.union(solve_direction('A'+line))
-    return res_paths
-
-
-def solve(line):
-    paths = (solve_directions(solve_directions(solve_numeric('A'+line))))
-    return (len(sorted(paths, key=len)[0]))
+    min_path = math.inf
+    for path in ('A'+hor+ver+'A', 'A'+ver+hor+'A'):
+        if valid_path(a, path[1:-1], kind):
+            if depth == 0:
+                min_path = min(min_path, len(path)-1)
+            else:
+                min_path = min(min_path, sum(path_len(
+                    KDIRS[path[i]], KDIRS[path[i+1]], 'direction', depth-1) for i in range(len(path)-1)))
+    return min_path
 
 
 res = 0
-for line in lines:
-    value = int(line[:-1])
-    path = solve(line)
-    print(line, value, path)
-    res += value * path
+for path in lines:
+    print(path)
+    value = int(path[:-1])
+    ext_path = 'A'+path
+    path_lens = [path_len(KNUMS[ext_path[i]], KNUMS[ext_path[i+1]],
+                          'numeric', 25) for i in range(len(ext_path)-1)]
+    len_path = sum(path_lens)
+    res += value * len_path
     print(res)
 
 print(res)
